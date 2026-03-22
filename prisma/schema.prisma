@@ -1,0 +1,250 @@
+datasource db {
+  provider = "postgresql" // or "mysql", "sqlite", etc.
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model School {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String
+  address   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  users             User[]
+  students          Student[]
+  teachers          Teacher[]
+  classes           Class[]
+  packs             Pack[]
+  enrollments       Enrollment[]
+  paymentMonths     PaymentMonth[]
+  sessions          Session[]
+  paymentTransactions PaymentTransaction[]
+  packClasses       PackClass[]
+  attendances       Attendance[]
+  teacherPayments   TeacherPayment[]
+
+  @@map("schools")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  schoolId     String   @map("school_id")
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("admin")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  school School @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId])
+  @@map("users")
+}
+
+model Teacher {
+  id               String   @id @default(uuid())
+  schoolId         String   @map("school_id")
+  name             String
+  phone            String
+  subject          String
+  paymentPercentage Float   @default(70.0) @map("payment_percentage")
+  status           String   @default("active")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  school  School  @relation(fields: [schoolId], references: [id])
+  classes Class[]
+  teacherPayments TeacherPayment[]
+
+  @@index([schoolId])
+  @@map("teachers")
+}
+
+model Student {
+  id          String   @id @default(uuid())
+  schoolId    String   @map("school_id")
+  firstName   String   @map("first_name")
+  lastName    String   @map("last_name")
+  phone       String
+  parentPhone String   @map("parent_phone")
+  status      String   @default("active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  school        School         @relation(fields: [schoolId], references: [id])
+  enrollments   Enrollment[]
+  paymentMonths PaymentMonth[]
+  attendances   Attendance[]
+
+  @@index([schoolId])
+  @@index([schoolId, id])
+  @@map("students")
+}
+
+model Class {
+  id               String   @id @default(uuid())
+  schoolId         String   @map("school_id")
+  name             String
+  baseMonthlyPrice Float    @map("base_monthly_price")
+  teacherId        String   @map("teacher_id")
+  status           String   @default("active")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  school      School       @relation(fields: [schoolId], references: [id])
+  teacher     Teacher      @relation(fields: [teacherId], references: [id])
+  enrollments Enrollment[]
+  sessions    Session[]
+  packClasses PackClass[]
+
+  @@index([schoolId])
+  @@index([schoolId, id])
+  @@map("classes")
+}
+
+model Pack {
+  id                 String   @id @default(uuid())
+  schoolId           String   @map("school_id")
+  name               String
+  discountPercentage Float    @map("discount_percentage")
+  status             String   @default("active")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  school      School       @relation(fields: [schoolId], references: [id])
+  packClasses PackClass[]
+  enrollments Enrollment[]
+
+  @@index([schoolId])
+  @@index([schoolId, id])
+  @@map("packs")
+}
+
+model PackClass {
+  id       String @id @default(uuid())
+  schoolId String @map("school_id")
+  packId   String @map("pack_id")
+  classId  String @map("class_id")
+
+  school School @relation(fields: [schoolId], references: [id])
+  pack   Pack   @relation(fields: [packId], references: [id])
+  class  Class  @relation(fields: [classId], references: [id])
+
+  @@unique([packId, classId])
+  @@index([schoolId])
+  @@map("pack_classes")
+}
+
+model Enrollment {
+  id                 String    @id @default(uuid())
+  schoolId           String    @map("school_id")
+  studentId          String    @map("student_id")
+  classId            String    @map("class_id")
+  packId             String?   @map("pack_id")
+  basePrice          Float     @map("base_price")
+  discountPercentage Float?    @map("discount_percentage")
+  discountAmount     Float?    @map("discount_amount")
+  finalPrice         Float     @map("final_price")
+  startDate          DateTime  @map("start_date")
+  endDate            DateTime? @map("end_date")
+  status             String    @default("active")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  school  School   @relation(fields: [schoolId], references: [id])
+  student Student  @relation(fields: [studentId], references: [id])
+  class   Class    @relation(fields: [classId], references: [id])
+  pack    Pack?    @relation(fields: [packId], references: [id])
+
+  @@index([schoolId])
+  @@index([schoolId, studentId])
+  @@index([schoolId, classId])
+  @@map("enrollments")
+}
+
+model PaymentMonth {
+  id             String   @id @default(uuid())
+  schoolId       String   @map("school_id")
+  studentId      String   @map("student_id")
+  month          String
+  expectedAmount Float    @map("expected_amount")
+  paidAmount     Float    @default(0) @map("paid_amount")
+  remainingAmount Float   @map("remaining_amount")
+  status         String   @default("unpaid")
+  generatedAt    DateTime @default(now()) @map("generated_at")
+
+  school       School               @relation(fields: [schoolId], references: [id])
+  student      Student              @relation(fields: [studentId], references: [id])
+  transactions PaymentTransaction[]
+
+  @@unique([studentId, month])
+  @@index([schoolId])
+  @@index([schoolId, month])
+  @@map("payment_months")
+}
+
+model PaymentTransaction {
+  id             String   @id @default(uuid())
+  schoolId       String   @map("school_id")
+  paymentMonthId String   @map("payment_month_id")
+  amount         Float
+  paymentDate    DateTime @map("payment_date")
+  note           String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  school       School       @relation(fields: [schoolId], references: [id])
+  paymentMonth PaymentMonth @relation(fields: [paymentMonthId], references: [id])
+
+  @@index([schoolId])
+  @@map("payment_transactions")
+}
+
+model Session {
+  id          String   @id @default(uuid())
+  schoolId    String   @map("school_id")
+  classId     String   @map("class_id")
+  sessionDate DateTime @map("session_date")
+  status      String   @default("scheduled")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  school      School       @relation(fields: [schoolId], references: [id])
+  class       Class        @relation(fields: [classId], references: [id])
+  attendances Attendance[]
+
+  @@index([schoolId])
+  @@index([schoolId, classId])
+  @@map("sessions")
+}
+
+model Attendance {
+  id        String @id @default(uuid())
+  schoolId  String @map("school_id")
+  sessionId String @map("session_id")
+  studentId String @map("student_id")
+  status    String @default("absent")
+
+  school  School  @relation(fields: [schoolId], references: [id])
+  session Session @relation(fields: [sessionId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@index([schoolId])
+  @@map("attendances")
+}
+
+model TeacherPayment {
+  id             String    @id @default(uuid())
+  schoolId       String    @map("school_id")
+  teacherId      String    @map("teacher_id")
+  month          String
+  totalCollected Float     @map("total_collected")
+  teacherShare   Float     @map("teacher_share")
+  status         String    @default("pending")
+  paidAt         DateTime? @map("paid_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  school  School  @relation(fields: [schoolId], references: [id])
+  teacher Teacher @relation(fields: [teacherId], references: [id])
+
+  @@unique([teacherId, month])
+  @@index([schoolId])
+  @@map("teacher_payments")
+}
