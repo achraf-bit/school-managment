@@ -39,7 +39,7 @@ export const paymentService = {
       
       for (const student of students) {
         const expectedAmount = student.enrollments.reduce(
-          (sum, enrollment) => sum + enrollment.finalPrice,
+          (sum: number, enrollment) => sum + enrollment.finalPrice,
           0
         );
 

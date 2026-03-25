@@ -62,7 +62,7 @@ export const teacherPaymentService = {
       if (!pm) return null;
 
       const studentEnrollments = allEnrollments.filter((e) => e.studentId === enrollment.studentId);
-      const totalPrice = studentEnrollments.reduce((sum, e) => sum + e.finalPrice, 0);
+      const totalPrice = studentEnrollments.reduce((sum: number, e) => sum + e.finalPrice, 0);
       const priceRatio = totalPrice > 0 ? enrollment.finalPrice / totalPrice : 0;
       
       const classPaidAmount = pm.paidAmount * priceRatio;
@@ -78,8 +78,8 @@ export const teacherPaymentService = {
       };
     }).filter(Boolean);
 
-    const totalCollected = studentBreakdown.reduce((sum, s) => sum + s.paidAmount, 0);
-    const teacherShare = studentBreakdown.reduce((sum, s) => sum + s.teacherShare, 0);
+    const totalCollected = studentBreakdown.reduce((sum: number, s) => sum + (s?.paidAmount ?? 0), 0);
+    const teacherShare = studentBreakdown.reduce((sum: number, s) => sum + (s?.teacherShare ?? 0), 0);
     const schoolShare = totalCollected - teacherShare;
 
     return {
