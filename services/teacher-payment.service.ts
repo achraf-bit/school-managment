@@ -57,14 +57,23 @@ export const teacherPaymentService = {
       },
     });
 
-    const studentBreakdown = enrollments.map((enrollment) => {
-      const pm = paymentMonths.find((p) => p.studentId === enrollment.studentId);
+    type BreakdownItem = {
+      studentId: string;
+      studentName: string;
+      className: string;
+      expectedAmount: number;
+      paidAmount: number;
+      teacherShare: number;
+    };
+
+    const studentBreakdown: BreakdownItem[] = enrollments.map((enrollment) => {
+      const pm = paymentMonths.find((p: { studentId: string }) => p.studentId === enrollment.studentId);
       if (!pm) return null;
 
-      const studentEnrollments = allEnrollments.filter((e) => e.studentId === enrollment.studentId);
-      const totalPrice = studentEnrollments.reduce((sum: number, e) => sum + e.finalPrice, 0);
+      const studentEnrollments = allEnrollments.filter((e: { studentId: string }) => e.studentId === enrollment.studentId);
+      const totalPrice = studentEnrollments.reduce((sum: number, e: { finalPrice: number }) => sum + e.finalPrice, 0);
       const priceRatio = totalPrice > 0 ? enrollment.finalPrice / totalPrice : 0;
-      
+
       const classPaidAmount = pm.paidAmount * priceRatio;
       const teacherShare = classPaidAmount * (teacher.paymentPercentage / 100);
 
@@ -76,10 +85,10 @@ export const teacherPaymentService = {
         paidAmount: classPaidAmount,
         teacherShare,
       };
-    }).filter(Boolean);
+    }).filter((s): s is BreakdownItem => s !== null);
 
-    const totalCollected = studentBreakdown.reduce((sum: number, s) => sum + (s?.paidAmount ?? 0), 0);
-    const teacherShare = studentBreakdown.reduce((sum: number, s) => sum + (s?.teacherShare ?? 0), 0);
+    const totalCollected = studentBreakdown.reduce((sum: number, s: BreakdownItem) => sum + s.paidAmount, 0);
+    const teacherShare = studentBreakdown.reduce((sum: number, s: BreakdownItem) => sum + s.teacherShare, 0);
     const schoolShare = totalCollected - teacherShare;
 
     return {
