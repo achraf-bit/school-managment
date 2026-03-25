@@ -4,13 +4,14 @@ import { teacherService } from "@/services/teacher.service";
 import { updateTeacherSchema } from "@/validations/teacher.schema";
 import { AppError } from "@/lib/errors";
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const schoolId = await getSchoolId();
     const body = await req.json();
     const data = updateTeacherSchema.parse(body);
 
-    const teacher = await teacherService.updateTeacher(schoolId, params.id, data);
+    const teacher = await teacherService.updateTeacher(schoolId, id, data);
 
     return NextResponse.json({ success: true, data: teacher });
   } catch (error: any) {
