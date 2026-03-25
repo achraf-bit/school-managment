@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Home, Users, GraduationCap, BookOpen, Package, UserPlus, DollarSign, Menu, X, Wallet, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useLanguage } from "@/components/language-provider";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +15,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { data: session, status } = useSession();
+  const { t } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -30,14 +33,14 @@ export default function DashboardLayout({
   }
 
   const navItems = [
-    { href: "/dashboard", label: "Dashboard", icon: Home },
-    { href: "/dashboard/students", label: "Students", icon: Users },
-    { href: "/dashboard/teachers", label: "Teachers", icon: GraduationCap },
-    { href: "/dashboard/classes", label: "Classes", icon: BookOpen },
-    { href: "/dashboard/packs", label: "Packs", icon: Package },
-    { href: "/dashboard/enrollments", label: "Enrollments", icon: UserPlus },
-    { href: "/dashboard/payments", label: "Payments", icon: DollarSign },
-    { href: "/dashboard/teacher-payments", label: "Teacher Payments", icon: Wallet },
+    { href: "/dashboard", label: t("dashboard"), icon: Home },
+    { href: "/dashboard/students", label: t("students"), icon: Users },
+    { href: "/dashboard/teachers", label: t("teachers"), icon: GraduationCap },
+    { href: "/dashboard/classes", label: t("classes"), icon: BookOpen },
+    { href: "/dashboard/packs", label: t("packs"), icon: Package },
+    { href: "/dashboard/enrollments", label: t("enrollments"), icon: UserPlus },
+    { href: "/dashboard/payments", label: t("payments"), icon: DollarSign },
+    { href: "/dashboard/teacher-payments", label: t("teacherPayments"), icon: Wallet },
   ];
 
   return (
@@ -81,20 +84,23 @@ export default function DashboardLayout({
           ))}
         </nav>
         <div className="border-t p-3 space-y-1">
+          <div className="px-3 py-2">
+            <LanguageSwitcher />
+          </div>
           <Link
             href="/dashboard/settings"
             onClick={() => setSidebarOpen(false)}
             className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-gray-100"
           >
             <Settings className="h-5 w-5" />
-            Settings
+            {t("settings")}
           </Link>
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-gray-100 text-red-600"
           >
             <LogOut className="h-5 w-5" />
-            Logout
+            {t("logout")}
           </button>
         </div>
       </aside>
