@@ -17,13 +17,13 @@ export async function GET() {
       }),
     ]);
 
-    const totalRevenue = paymentMonths.reduce((sum, pm) => sum + pm.expectedAmount, 0);
-    const collectedRevenue = paymentMonths.reduce((sum, pm) => sum + pm.paidAmount, 0);
-    const pendingRevenue = paymentMonths.reduce((sum, pm) => sum + pm.remainingAmount, 0);
+    const totalRevenue = paymentMonths.reduce((sum: number, pm: any) => sum + pm.expectedAmount, 0);
+    const collectedRevenue = paymentMonths.reduce((sum: number, pm: any) => sum + pm.paidAmount, 0);
+    const pendingRevenue = paymentMonths.reduce((sum: number, pm: any) => sum + pm.remainingAmount, 0);
     const collectionRate = totalRevenue > 0 ? (collectedRevenue / totalRevenue) * 100 : 0;
 
     const paymentStatusCounts = paymentMonths.reduce(
-      (acc, pm) => {
+      (acc: Record<string, number>, pm: any) => {
         acc[pm.status] = (acc[pm.status] || 0) + 1;
         return acc;
       },
